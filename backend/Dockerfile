@@ -12,7 +12,10 @@ COPY . .
 
 ENV PYTHONPATH=/app
 
-# Switch to non-root user
+# Ensure startup script is executable
+USER root
+RUN chmod +x /app/start.sh
 USER appuser
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start the combined services
+CMD ["/app/start.sh"]
