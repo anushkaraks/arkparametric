@@ -47,16 +47,25 @@ class TriggerResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class ClaimPayoutSummary(BaseModel):
+    amount: float
+    status: str
+
+    class Config:
+        from_attributes = True
+
 class ClaimResponse(BaseModel):
     id: int
     user_id: int
     trigger_id: int
+    trigger_type: Optional[str] = None  # joined from Trigger
     disruption_hours: float
     loss_calculated: float
     status: str
     fraud_confidence: float
     created_at: datetime
-    
+    payout: Optional[ClaimPayoutSummary] = None
+
     class Config:
         from_attributes = True
 
