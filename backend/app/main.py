@@ -38,6 +38,11 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(api_router, prefix="/api")
 
 
+@app.get("/")
+async def root():
+    return {"message": "Ark API is online", "docs": "/docs"}
+
+
 @app.get("/health")
 async def health_check():
-    return {"status": "ok"}
+    return {"status": "ok", "service": "ark-backend"}

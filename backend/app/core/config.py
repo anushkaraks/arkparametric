@@ -28,9 +28,10 @@ class Settings(BaseSettings):
     @field_validator("REDIS_URL", mode="before")
     @classmethod
     def clean_redis_url(cls, v: str) -> str:
-        if v is not None:
-            v = v.strip()
-        return v or "redis://redis:6379/0"
+        if v is not None and str(v).strip():
+            return str(v).strip()
+        # Default to a generic redis url if empty
+        return "redis://localhost:6379/0"
 
     # Gemini AI
     GEMINI_API_KEY: str = ""
