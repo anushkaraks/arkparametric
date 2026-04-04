@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Run database seeding/migration
+echo "Seeding database..."
+python seed.py
+
 # Start the worker in background
 echo "Starting Celery Worker..."
 celery -A app.core.celery_app worker --loglevel=info &
