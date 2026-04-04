@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     # Redis / Celery
     REDIS_URL: str = "redis://redis:6379/0"
 
+    @field_validator("REDIS_URL", mode="before")
+    @classmethod
+    def clean_redis_url(cls, v: str) -> str:
+        if v is not None:
+            v = v.strip()
+        return v or "redis://redis:6379/0"
+
     # Gemini AI
     GEMINI_API_KEY: str = ""
 
