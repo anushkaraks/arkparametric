@@ -1,30 +1,32 @@
-import google.generativeai as genai
 import json
-from app.core.config import settings
+import logging
+from app.ml.gemini_utils import configure_gemini, sanitize_input, get_model
 
-def configure_gemini():
-    if settings.GEMINI_API_KEY:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
+logger = logging.getLogger(__name__)
+
 
 async def calculate_dynamic_premium(city: str, avg_hours: float, platform: str) -> dict:
     """
     Uses Gemini to evaluate a risk score and base premium.
-    If no API key is present, returns dummy values.
+    If no API key is present, returns fallback values.
     """
-    if not settings.GEMINI_API_KEY:
+    if not configure_gemini():
+        logger.warning("GEMINI_API_KEY not set — using fallback premium values.")
         return {
             "risk_score": 1.2,
             "weekly_premium": 25.0,
             "hourly_rate": 8.0,
-            "reasoning": "Fallback to base rates due to missing GEMINI_API_KEY"
+            "reasoning": "Fallback to base rates due to missing GEMINI_API_KEY",
         }
-    
-    configure_gemini()
+
+    safe_city = sanitize_input(city)
+    safe_platform = sanitize_input(platform)
+
     prompt = f"""
     You are an actuary AI for a parametric income protection platform for gig workers.
     Assess the risk profile for a worker with the following details:
-    - City: {city}
-    - Platform: {platform}
+    - City: {safe_city}
+    - Platform: {safe_platform}
     - Average Hours/Week: {avg_hours}
 
     Generate a JSON response (and only JSON) with the following structure:
@@ -37,16 +39,17 @@ async def calculate_dynamic_premium(city: str, avg_hours: float, platform: str) 
     Do not output any markdown formatting, only raw valid JSON.
     """
     try:
-        model = genai.GenerativeModel('gemini-pro')
+        model = get_model()
         response = model.generate_content(prompt)
-        # Parse JSON
-        result = json.loads(response.text.strip().replace('```json', '').replace('```', ''))
+        raw = response.text.strip().replace("```json", "").replace("```", "")
+        result = json.loads(raw)
+        logger.info("Gemini premium calculation completed for city=%s", safe_city)
         return result
     except Exception as e:
-        print(f"Gemini API Error: {e}")
+        logger.error("Gemini API Error during premium calculation: %s", e)
         return {
             "risk_score": 1.5,
             "weekly_premium": 20.0,
             "hourly_rate": 10.0,
-            "reasoning": "Fallback due to API error"
+            "reasoning": "Fallback due to API error",
         }

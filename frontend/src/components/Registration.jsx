@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { User, MapPin, Briefcase, Clock, ArrowRight, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { registerUser } from '../lib/api';
+import { User, MapPin, Briefcase, Clock, ArrowRight, Loader2, CheckCircle, AlertCircle, LogIn } from 'lucide-react';
+import { registerUser, login } from '../lib/api';
 
 const CITIES = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad'];
 const PLATFORMS = ['Delivery (Swiggy/Zomato)', 'Ride-hailing (Uber/Ola)', 'Freelance (Upwork)', 'E-commerce (Meesho)', 'Domestic Services (Urban Company)'];
@@ -8,6 +8,7 @@ const PLATFORMS = ['Delivery (Swiggy/Zomato)', 'Ride-hailing (Uber/Ola)', 'Freel
 const Registration = ({ onRegistered }) => {
   const [form, setForm] = useState({ name: '', city: 'Mumbai', platform: 'Delivery (Swiggy/Zomato)', avg_hours_per_week: 40 });
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
 
@@ -19,12 +20,27 @@ const Registration = ({ onRegistered }) => {
     setLoading(true); setError('');
     try {
       const user = await registerUser({ ...form, avg_hours_per_week: Number(form.avg_hours_per_week) });
-      setSuccess(user);
-      setTimeout(() => onRegistered(user), 2000);
+      // Auto-login after registration
+      const authData = await login(user.id);
+      setSuccess(authData.user);
+      setTimeout(() => onRegistered(authData.user), 2000);
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setDemoLoading(true); setError('');
+    try {
+      const authData = await login(1);
+      setSuccess(authData.user);
+      setTimeout(() => onRegistered(authData.user), 1500);
+    } catch (err) {
+      setError('Demo user not found. Run the seed script first, or register a new account.');
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -135,7 +151,13 @@ const Registration = ({ onRegistered }) => {
 
           <p className="text-center text-xs text-slate-500">
             Already registered?{' '}
-            <button type="button" onClick={() => onRegistered({ id: 1 })} className="text-blue-400 hover:underline">
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              disabled={demoLoading}
+              className="text-blue-400 hover:underline inline-flex items-center gap-1"
+            >
+              {demoLoading ? <Loader2 className="animate-spin" size={12} /> : <LogIn size={12} />}
               Continue as Demo User (ID: 1)
             </button>
           </p>

@@ -1,0 +1,14 @@
+node_modules
+.git
+.gitignore
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+dist
+.npm
+.eslintcache
+.vite
+*.md

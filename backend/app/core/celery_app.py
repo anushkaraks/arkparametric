@@ -1,12 +1,15 @@
+import logging
 from celery import Celery
 from celery.schedules import crontab
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 celery_app = Celery(
     "ark_worker",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
-    include=["app.worker.tasks"]
+    include=["app.worker.tasks"],
 )
 
 celery_app.conf.update(
@@ -21,6 +24,8 @@ celery_app.conf.update(
 celery_app.conf.beat_schedule = {
     "poll-triggers-every-15-min": {
         "task": "app.worker.tasks.poll_environmental_triggers",
-        "schedule": crontab(minute='*/15'),
+        "schedule": crontab(minute="*/15"),
     },
 }
+
+logger.info("Celery app configured with broker=%s", settings.REDIS_URL)
