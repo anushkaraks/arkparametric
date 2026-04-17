@@ -1,4 +1,9 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL;
+
+// Safety check (helps debugging)
+if (!API_URL) {
+  throw new Error("VITE_API_URL is not defined. Check Vercel environment variables.");
+}
 
 // ── Token management ──────────────────────────────────────────────────────────
 let _token = localStorage.getItem('ark_token') || null;
