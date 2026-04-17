@@ -19,9 +19,9 @@ app = FastAPI(title="Ark (Arcutis) API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://arks-two.vercel.app/"  # 🔥 replace with YOUR Vercel URL
+        "https://arks-two.vercel.app" 
     ],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
