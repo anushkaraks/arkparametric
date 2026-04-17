@@ -1,11 +1,14 @@
+// ── Base URL ────────────────────────────────────────────────────────────────
 const API_URL = import.meta.env.VITE_API_URL;
 
-// Safety check (helps debugging)
 if (!API_URL) {
-  throw new Error("VITE_API_URL is not defined. Check Vercel environment variables.");
+  throw new Error("VITE_API_URL is missing. Check Vercel environment variables.");
 }
 
-// ── Token management ──────────────────────────────────────────────────────────
+// Debug (remove later)
+console.log("API URL:", API_URL);
+
+// ── Token management ────────────────────────────────────────────────────────
 let _token = localStorage.getItem('ark_token') || null;
 
 export const setToken = (token) => {
@@ -24,14 +27,13 @@ export const clearToken = () => {
   localStorage.removeItem('ark_token');
 };
 
-// ── HTTP request helper ───────────────────────────────────────────────────────
+// ── HTTP request helper ─────────────────────────────────────────────────────
 const request = async (path, options = {}) => {
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
 
-  // Attach JWT if available
   if (_token) {
     headers['Authorization'] = `Bearer ${_token}`;
   }
@@ -41,7 +43,6 @@ const request = async (path, options = {}) => {
     ...options,
   });
 
-  // Handle 401 — clear token and re-throw
   if (res.status === 401) {
     clearToken();
     throw new Error('Session expired. Please log in again.');
@@ -51,10 +52,13 @@ const request = async (path, options = {}) => {
     const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
     throw new Error(err.detail || `HTTP ${res.status}`);
   }
+
   return res.json();
 };
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+// ── Auth ────────────────────────────────────────────────────────────────────
+// ⚠️ CHECK YOUR /docs → remove "/api" if not present there
+
 export const login = async (userId) => {
   const data = await request('/api/auth/login', {
     method: 'POST',
@@ -64,13 +68,11 @@ export const login = async (userId) => {
   return data;
 };
 
-export const requestOTP = async (phone) => {
-  // Returns { message, demo_otp, user_exists }
-  return request('/api/auth/request-otp', {
+export const requestOTP = (phone) =>
+  request('/api/auth/request-otp', {
     method: 'POST',
     body: JSON.stringify({ phone }),
   });
-};
 
 export const verifyOTP = async (phone, otp) => {
   const data = await request('/api/auth/verify-otp', {
@@ -81,7 +83,7 @@ export const verifyOTP = async (phone, otp) => {
   return data;
 };
 
-// ── Users ─────────────────────────────────────────────────────────────────────
+// ── Users ───────────────────────────────────────────────────────────────────
 export const registerUser = (data) =>
   request('/api/users/', { method: 'POST', body: JSON.stringify(data) });
 
@@ -94,7 +96,7 @@ export const fetchCurrentUser = () =>
 export const fetchUserPolicies = (userId) =>
   request(`/api/users/${userId}/policies`);
 
-// ── Policies ──────────────────────────────────────────────────────────────────
+// ── Policies ────────────────────────────────────────────────────────────────
 export const createPolicy = (data) =>
   request('/api/policies/', { method: 'POST', body: JSON.stringify(data) });
 
@@ -104,32 +106,31 @@ export const togglePolicy = (policyId) =>
 export const fetchAllPolicies = () =>
   request('/api/policies/');
 
-// ── Claims ────────────────────────────────────────────────────────────────────
+// ── Claims ──────────────────────────────────────────────────────────────────
 export const fetchClaims = (userId) =>
   request(`/api/claims/?user_id=${userId}`);
 
 export const fetchAllClaims = () =>
   request('/api/claims/');
 
-// ── Premium Calculator (Gemini) ───────────────────────────────────────────────
+// ── Simulator ───────────────────────────────────────────────────────────────
 export const calculatePremium = (city, hours, platform) =>
   request(`/api/simulator/premium?city=${encodeURIComponent(city)}&hours=${hours}&platform=${encodeURIComponent(platform)}`);
 
-// ── Simulator ─────────────────────────────────────────────────────────────────
 export const simulateTrigger = (city = 'Mumbai') =>
   request(`/api/simulator/trigger?city=${encodeURIComponent(city)}`, { method: 'POST' });
 
-// ── Fraud ─────────────────────────────────────────────────────────────────────
+// ── Fraud ───────────────────────────────────────────────────────────────────
 export const fetchFraudAnalysis = (claimId) =>
   request(`/api/fraud/${claimId}/fraud-analysis`);
 
-// ── Payouts ────────────────────────────────────────────────────────────────────
+// ── Payouts ─────────────────────────────────────────────────────────────────
 export const initiatePayout = (claimId, method) =>
   request('/api/payouts/initiate', {
     method: 'POST',
     body: JSON.stringify({ claim_id: claimId, method }),
   });
 
-// ── Admin ──────────────────────────────────────────────────────────────────────
+// ── Admin ───────────────────────────────────────────────────────────────────
 export const fetchAdminAnalytics = () =>
   request('/api/admin/analytics');
