@@ -15,16 +15,21 @@ logger = logging.getLogger(__name__)
 # ── App ──────────────────────────────────────────────────────────────────────────
 app = FastAPI(title="Ark (Arcutis) API", version="1.0.0")
 
-# ── CORS (FINAL WORKING FIX) ────────────────────────────────────────────────────
+# ── CORS (FINAL FIX) ────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://arks-two.vercel.app" 
+        "https://arks-two.vercel.app"
     ],
-    allow_credentials=False,
+    allow_credentials=True,   
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── IMPORTANT: Handle preflight (OPTIONS) ───────────────────────────────────────
+@app.options("/{full_path:path}")
+async def preflight_handler(full_path: str):
+    return JSONResponse(content={"ok": True})
 
 # ── Global exception handler ────────────────────────────────────────────────────
 @app.exception_handler(Exception)
