@@ -3,8 +3,10 @@ set -e
 
 # Wait for database to be ready
 echo "Waiting for database..."
-until python -c "import socket; s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.connect(('${DATABASE_URL#*@}', 5432))" 2>/dev/null; do
-  echo "Database not ready yet... sleeping"
+# Extract hostname from DATABASE_URL (handling postgres://user:pass@host:port/db)
+DB_HOST=$(python3 -c "from urllib.parse import urlparse; print(urlparse('$DATABASE_URL').hostname)")
+until python3 -c "import socket; s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.settimeout(1); s.connect(('$DB_HOST', 5432))" 2>/dev/null; do
+  echo "Database ($DB_HOST) not ready yet... sleeping"
   sleep 2
 done
 
