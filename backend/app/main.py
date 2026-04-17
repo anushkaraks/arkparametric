@@ -1,52 +1,39 @@
 import logging
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.api import api_router
 
-# ── Logging ─────────────────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)-8s [%(name)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+# ── Logging ─────────────────────────────────────────────────────
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ── App ─────────────────────────────────────────────────────────────────────────
-app = FastAPI(title="Ark (Arcutis) API", version="1.0.0")
+# ── Create app ──────────────────────────────────────────────────
+app = FastAPI()
 
-# ── CORS (FORCE WORKING VERSION) ────────────────────────────────────────────────
+# 🔥 ADD CORS FIRST (VERY IMPORTANT)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # 🔥 allow all origins
-    allow_credentials=False,      # 🔥 important with "*"
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ── Global exception handler ────────────────────────────────────────────────────
+# ── Exception handler ───────────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(
-        "Unhandled exception on %s %s: %s",
-        request.method,
-        request.url,
-        exc,
-        exc_info=True
-    )
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "An internal server error occurred. Please try again later."},
-    )
+    logger.error(f"Error: {exc}")
+    return JSONResponse(status_code=500, content={"detail": "Server error"})
 
-# ── Routers ─────────────────────────────────────────────────────────────────────
+# 🔥 INCLUDE ROUTER AFTER CORS
 app.include_router(api_router, prefix="/api")
 
-# ── Health + Root ───────────────────────────────────────────────────────────────
+# ── Routes ─────────────────────────────────────────────────────
 @app.get("/")
 async def root():
-    return {"message": "Ark API is online", "docs": "/docs"}
+    return {"message": "API working"}
 
 @app.get("/health")
-async def health_check():
-    return {"status": "ok", "service": "ark-backend"}
+async def health():
+    return {"status": "ok"}
