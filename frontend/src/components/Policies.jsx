@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, CloudRain, Calendar, DollarSign, MapPin, FileText, History, RefreshCw } from 'lucide-react';
+import { Shield, CloudRain, Calendar, IndianRupee, MapPin, FileText, History, RefreshCw } from 'lucide-react';
 import { fetchUserPolicies } from '../lib/api';
 
 export default function Policies({ user }) {
@@ -90,7 +90,7 @@ export default function Policies({ user }) {
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">
                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1.5 border-b border-gray-200 pb-2">
-                     <DollarSign size={12} className="text-amber-700" /> Max Payout
+                     <IndianRupee size={12} className="text-amber-700" /> Max Payout
                    </p>
                    <p className="text-lg font-bold text-dark mt-2">₹{(displayActive.weekly_premium * 500).toFixed(2)}</p>
                 </div>

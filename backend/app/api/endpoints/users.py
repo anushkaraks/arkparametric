@@ -24,6 +24,7 @@ async def create_user(user_req: UserCreate, db: AsyncSession = Depends(get_db)):
 
     new_user = User(
         name=user_req.name,
+        phone=user_req.phone,
         city=user_req.city,
         platform=user_req.platform,
         avg_hours_per_week=user_req.avg_hours_per_week,
@@ -33,7 +34,19 @@ async def create_user(user_req: UserCreate, db: AsyncSession = Depends(get_db)):
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
-    logger.info("User #%d (%s) registered.", new_user.id, new_user.name)
+    
+    # Auto-create an active policy for the user so simulation works immediately
+    new_policy = Policy(
+        user_id=new_user.id,
+        weekly_premium=ml_data.get("weekly_premium", 25.0),
+        coverage_hours=new_user.avg_hours_per_week,
+        active_status=True,
+        risk_score=new_user.risk_profile_score
+    )
+    db.add(new_policy)
+    await db.commit()
+    
+    logger.info("User #%d (%s) registered with active policy.", new_user.id, new_user.name)
     return new_user
 
 

@@ -44,7 +44,11 @@ async def list_claims(
             "fraud_confidence": c.fraud_confidence,
             "created_at": c.created_at,
             "payout": (
-                {"amount": c.payout.amount, "status": c.payout.status}
+                {
+                    "amount": c.payout.amount, 
+                    "status": c.payout.status,
+                    "transaction_id": c.payout.transaction_id
+                }
                 if c.payout
                 else None
             ),

@@ -33,6 +33,7 @@ async def seed_db():
             user = User(
                 id=1,
                 name="Ramesh Kumar",
+                phone="+919999999999",
                 city="Mumbai",
                 platform="Swiggy",
                 avg_hours_per_week=40,

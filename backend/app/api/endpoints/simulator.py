@@ -19,7 +19,7 @@ async def trigger_simulation(
     Normally this runs every 15 minutes via Celery.
     """
     logger.info("Manual trigger simulation requested for city=%s", city)
-    await _poll_and_commit(city)
+    await _poll_and_commit(city, force=True)
     return {"message": f"Simulation cycle completed for {city}. Triggers and claims assessed."}
 
 

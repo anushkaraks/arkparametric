@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, Activity, AlertCircle, ChevronRight, Zap, RefreshCw, Send, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { IndianRupee, Activity, AlertCircle, ChevronRight, Zap, RefreshCw, Send, CheckCircle2, Clock, XCircle, CreditCard } from 'lucide-react';
 import { fetchClaims, simulateTrigger } from '../lib/api';
+import FraudBadge from './FraudBadge';
+import PayoutModal from './PayoutModal';
 
 export default function Claims({ user }) {
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [simulating, setSimulating] = useState(false);
   const [triggerType, setTriggerType] = useState('severe_weather');
+  const [selectedClaim, setSelectedClaim] = useState(null);
+  const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -83,15 +87,15 @@ export default function Claims({ user }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="card">
                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Total Paid</p>
-               <p className="text-2xl font-bold text-amber-700">₹{totalPaid > 0 ? totalPaid.toFixed(2) : '12,450.00'}</p>
+               <p className="text-2xl font-bold text-amber-700">₹{totalPaid.toLocaleString()}</p>
             </div>
             <div className="card">
                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Active Claims</p>
-               <p className="text-2xl font-bold text-dark">{activeCount > 0 ? activeCount : '2'}</p>
+               <p className="text-2xl font-bold text-dark">{activeCount}</p>
             </div>
             <div className="card">
                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Avg. Payout</p>
-               <p className="text-2xl font-bold text-dark">₹{avgPayout > 0 ? avgPayout.toFixed(0) : '1,556'}</p>
+               <p className="text-2xl font-bold text-dark">₹{avgPayout.toFixed(0)}</p>
             </div>
           </div>
 
@@ -104,92 +108,49 @@ export default function Claims({ user }) {
             
             <div className="space-y-3">
               {claims.length === 0 ? (
-                // Fallback UI to match design when empty
-                <>
-                  <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100">
-                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600">
-                          <DollarSign size={18} />
-                        </div>
-                        <div>
-                           <p className="font-bold text-dark text-sm">Wildfire Perimeter Trigger</p>
-                           <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mt-1">Policy: #ARK-9921 • Oct 14, 2023</p>
-                           <div className="flex items-center gap-1.5 mt-2">
-                             <CheckCircle2 size={12} className="text-green-600" />
-                             <span className="text-[10px] font-bold uppercase tracking-wider text-green-700">Paid</span>
-                           </div>
-                        </div>
-                     </div>
-                     <div className="flex flex-col items-end gap-1">
-                        <span className="font-bold text-dark">₹4,500.00</span>
-                        <ChevronRight size={16} className="text-gray-400" />
-                     </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100">
-                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-500">
-                          <Activity size={18} />
-                        </div>
-                        <div>
-                           <p className="font-bold text-dark text-sm">Flash Flood Event</p>
-                           <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mt-1">Policy: #ARK-7732 • Oct 28, 2023</p>
-                           <div className="flex items-center gap-1.5 mt-2">
-                             <Clock size={12} className="text-amber-800" />
-                             <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Pending</span>
-                           </div>
-                        </div>
-                     </div>
-                     <div className="flex flex-col items-end gap-1">
-                        <span className="font-bold text-dark">₹1,200.00</span>
-                        <ChevronRight size={16} className="text-gray-400" />
-
-                     </div>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100">
-                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
-                          <AlertCircle size={18} />
-                        </div>
-                        <div>
-                           <p className="font-bold text-dark text-sm">Excessive Heat Exposure</p>
-                           <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mt-1">Policy: #ARK-2210 • Sep 12, 2023</p>
-                           <div className="flex items-center gap-1.5 mt-2">
-                             <XCircle size={12} className="text-red-600" />
-                             <span className="text-[10px] font-bold uppercase tracking-wider text-red-700">Declined</span>
-                           </div>
-                        </div>
-                     </div>
-                     <div className="flex flex-col items-end gap-1">
-                        <span className="font-bold text-gray-500 line-through">₹850.00</span>
-                        <ChevronRight size={16} className="text-gray-400" />
-                     </div>
-                  </div>
-                </>
+                <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                  <Activity className="mx-auto text-gray-300 mb-2" size={32} />
+                  <p className="text-sm text-gray-500">No recent claim events detected.</p>
+                </div>
               ) : (
                 claims.map(claim => (
-                  <div key={claim.id} className="bg-gray-50 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100">
-                     <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${claim.status === 'approved' ? 'bg-orange-100 text-orange-600' : claim.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-gray-200 text-gray-500'}`}>
-                          {claim.status === 'approved' ? <DollarSign size={18} /> : claim.status === 'rejected' ? <AlertCircle size={18} /> : <Activity size={18} />}
-                        </div>
-                        <div>
-                           <p className="font-bold text-dark text-sm capitalize">{(claim.trigger_type || 'Disruption').replace('_', ' ')}</p>
-                           <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mt-1">Policy: #ARK-{claim.policy_id} • {new Date(claim.event_date).toLocaleDateString()}</p>
-                           <div className="flex items-center gap-1.5 mt-2">
-                             {getStatusIcon(claim.status)}
-                             <span className={`text-[10px] font-bold uppercase tracking-wider ${getStatusColor(claim.status)}`}>
-                               {claim.status === 'approved' ? 'Paid' : claim.status}
-                             </span>
+                  <div key={claim.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100 transition-all hover:shadow-md">
+                     <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${claim.status === 'approved' ? 'bg-orange-100 text-orange-600' : claim.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-gray-200 text-gray-500'}`}>
+                             {claim.status === 'approved' ? <IndianRupee size={18} /> : claim.status === 'rejected' ? <AlertCircle size={18} /> : <Activity size={18} />}
+                           </div>
+                           <div>
+                              <p className="font-bold text-dark text-sm capitalize">{(claim.trigger_type || 'Disruption').replace('_', ' ')}</p>
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mt-1">Policy: #ARK-{claim.policy_id} • {new Date(claim.created_at).toLocaleDateString()}</p>
+                              <div className="flex items-center gap-3 mt-2">
+                                <FraudBadge claimId={claim.id} initialConfidence={claim.fraud_confidence} />
+                                {claim.status === 'approved' && !claim.payout && (
+                                  <button 
+                                    onClick={() => { setSelectedClaim(claim); setIsPayoutModalOpen(true); }}
+                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 hover:text-amber-900 uppercase"
+                                  >
+                                    <CreditCard size={10} /> Pay Now
+                                  </button>
+                                )}
+                              </div>
                            </div>
                         </div>
-                     </div>
-                     <div className="flex flex-col items-end gap-1">
-                        <span className={`font-bold ${claim.status === 'rejected' ? 'text-gray-500 line-through' : 'text-dark'}`}>
-                           ₹{claim.loss_calculated?.toFixed(2) || '0.00'}
-                        </span>
-                        <ChevronRight size={16} className="text-gray-400" />
+                        <div className="flex flex-col items-end gap-1 text-right">
+                           <span className={`font-black ${claim.status === 'rejected' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                              ₹{claim.loss_calculated?.toFixed(2) || '0.00'}
+                           </span>
+                           {claim.payout ? (
+                             <div className="flex flex-col items-end">
+                               <span className="text-[9px] font-bold text-green-600 uppercase tracking-tighter">Transferred ✓</span>
+                               <span className="text-[8px] font-mono text-gray-400">{claim.payout.transaction_id}</span>
+                             </div>
+                           ) : (
+                             <span className={`text-[10px] font-bold uppercase tracking-wider ${getStatusColor(claim.status)}`}>
+                               {claim.status}
+                             </span>
+                           )}
+                        </div>
                      </div>
                   </div>
                 ))
@@ -231,6 +192,14 @@ export default function Claims({ user }) {
         </>
       )}
 
+      {selectedClaim && (
+        <PayoutModal 
+          isOpen={isPayoutModalOpen}
+          onClose={() => { setIsPayoutModalOpen(false); setSelectedClaim(null); }}
+          claim={selectedClaim}
+          onPayoutSuccess={load}
+        />
+      )}
     </div>
   );
 }

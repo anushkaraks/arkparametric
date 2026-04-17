@@ -15,10 +15,20 @@ class LoginRequest(BaseModel):
     user_id: int = Field(..., gt=0, description="User ID to authenticate as")
 
 
+class OTPRequest(BaseModel):
+    phone: str = Field(..., min_length=7, max_length=20, description="Phone number")
+
+
+class OTPVerify(BaseModel):
+    phone: str = Field(..., min_length=7, max_length=20)
+    otp: str = Field(..., min_length=4, max_length=6)
+
+
 # ── Users ──────────────────────────────────────────────────────────────────────
 
 class UserCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
+    phone: Optional[str] = Field(None, max_length=20)
     city: str = Field(..., min_length=1, max_length=50)
     platform: str = Field(..., min_length=1, max_length=100)
     avg_hours_per_week: float = Field(..., gt=0, le=168, description="Hours worked per week (1-168)")
@@ -27,6 +37,7 @@ class UserCreate(BaseModel):
 class UserResponse(BaseModel):
     id: int
     name: str
+    phone: Optional[str] = None
     city: str
     platform: str
     avg_hours_per_week: float
@@ -76,6 +87,7 @@ class TriggerResponse(BaseModel):
 class ClaimPayoutSummary(BaseModel):
     amount: float
     status: str
+    transaction_id: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -99,15 +111,42 @@ class ClaimResponse(BaseModel):
 
 # ── Payouts ────────────────────────────────────────────────────────────────────
 
+class PayoutInitiateRequest(BaseModel):
+    claim_id: int
+    method: str = Field(..., description="Payment method: 'UPI', 'CARD', or 'BANK'")
+
+
 class PayoutResponse(BaseModel):
     id: int
     claim_id: int
     amount: float
     status: str
+    transaction_id: Optional[str] = None
     processed_at: datetime
 
     class Config:
         from_attributes = True
+
+
+# ── Fraud ──────────────────────────────────────────────────────────────────────
+
+class FraudAnalysisResponse(BaseModel):
+    claim_id: int
+    fraud_confidence: float
+    gps_spoofing_flag: bool
+    weather_authenticity: bool
+    behavioral_pattern: str
+
+
+# ── Admin ──────────────────────────────────────────────────────────────────────
+
+class AdminAnalyticsResponse(BaseModel):
+    total_premiums: float
+    total_paid: float
+    loss_ratio: float
+    claims_by_trigger: dict
+    high_risk_cities: list
+    fraud_flags: int
 
 
 # Fix forward ref for TokenResponse

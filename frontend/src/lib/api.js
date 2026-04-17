@@ -59,6 +59,23 @@ export const login = async (userId) => {
   return data;
 };
 
+export const requestOTP = async (phone) => {
+  // Returns { message, demo_otp, user_exists }
+  return request('/api/auth/request-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  });
+};
+
+export const verifyOTP = async (phone, otp) => {
+  const data = await request('/api/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phone, otp }),
+  });
+  setToken(data.access_token);
+  return data;
+};
+
 // ── Users ─────────────────────────────────────────────────────────────────────
 export const registerUser = (data) =>
   request('/api/users/', { method: 'POST', body: JSON.stringify(data) });
@@ -96,3 +113,18 @@ export const calculatePremium = (city, hours, platform) =>
 // ── Simulator ─────────────────────────────────────────────────────────────────
 export const simulateTrigger = (city = 'Mumbai') =>
   request(`/api/simulator/trigger?city=${encodeURIComponent(city)}`, { method: 'POST' });
+
+// ── Fraud ─────────────────────────────────────────────────────────────────────
+export const fetchFraudAnalysis = (claimId) =>
+  request(`/api/fraud/${claimId}/fraud-analysis`);
+
+// ── Payouts ────────────────────────────────────────────────────────────────────
+export const initiatePayout = (claimId, method) =>
+  request('/api/payouts/initiate', {
+    method: 'POST',
+    body: JSON.stringify({ claim_id: claimId, method }),
+  });
+
+// ── Admin ──────────────────────────────────────────────────────────────────────
+export const fetchAdminAnalytics = () =>
+  request('/api/admin/analytics');

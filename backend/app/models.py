@@ -8,6 +8,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    phone = Column(String, nullable=True, index=True)
     city = Column(String, nullable=False)
     platform = Column(String, nullable=False)
     avg_hours_per_week = Column(Float, nullable=False)
@@ -63,6 +64,7 @@ class Payout(Base):
     claim_id = Column(Integer, ForeignKey("claims.id"))
     amount = Column(Float, nullable=False)
     status = Column(String, default="processing") # "processing", "completed"
+    transaction_id = Column(String, nullable=True)
     processed_at = Column(DateTime(timezone=True), server_default=func.now())
 
     claim = relationship("Claim", back_populates="payout")

@@ -54,8 +54,24 @@ export default function Dashboard({ user }) {
       
       {/* ── Header ─────────────────────────────────────────────── */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-dark tracking-tight">Sentinel Dashboard</h1>
+        <h1 className="text-2xl md:text-3xl font-extrabold text-dark tracking-tight">Ark Parametric Dashboard</h1>
         <p className="text-sm text-gray-500 mt-1">Monitoring environmental volatility for your gig economy stability.</p>
+      </div>
+
+      {/* ── Phase 3 Worker Stats ─────────────────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Earnings Protected', value: `₹${((user?.hourly_rate || 15) * (activePolicy?.coverage_hours || 40)).toLocaleString()}`, icon: Shield, color: 'text-amber-600' },
+          { label: 'Active Coverage', value: policies.filter(p => p.active_status).length, icon: Activity, color: 'text-blue-600' },
+          { label: 'Settled Claims', value: claims.filter(c => c.status === 'approved').length, icon: CheckCircle2, color: 'text-green-600' },
+          { label: 'Risk Level', value: user?.risk_profile_score?.toFixed(1) || '1.0', icon: Zap, color: 'text-red-600' },
+        ].map((stat) => (
+          <div key={stat.label} className="card p-4 flex flex-col gap-2 border-none shadow-sm bg-white/60 backdrop-blur-md">
+            <stat.icon size={18} className={stat.color} />
+            <p className="text-xl font-black text-gray-900">{stat.value}</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{stat.label}</p>
+          </div>
+        ))}
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
@@ -176,15 +192,24 @@ export default function Dashboard({ user }) {
         <div className="space-y-6">
 
           {/* Risk Quotient Card */}
-          <div className="card-dark relative overflow-hidden bg-gray-900">
-            <div className="absolute -right-16 -top-16 opacity-10">
+          <div className="card-dark relative overflow-hidden bg-gray-900 group">
+            <div className="absolute -right-16 -top-16 opacity-10 group-hover:rotate-12 transition-transform duration-700">
               <Activity size={240} className="text-amber-500" />
             </div>
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Risk Quotient</p>
-              <p className="text-4xl font-extrabold mb-4">8.4<span className="text-lg text-gray-500 font-medium">/10</span></p>
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Risk Quotient</p>
+                  <p className="text-4xl font-extrabold">{((user?.risk_profile_score || 1) * 8.4).toFixed(1)}<span className="text-lg text-gray-500 font-medium">/10</span></p>
+                </div>
+                <div className="w-12 h-12 rounded-full border-2 border-amber-500/20 flex items-center justify-center">
+                  <Activity size={20} className="text-amber-500 animate-pulse" />
+                </div>
+              </div>
               <p className="text-sm text-gray-300 mb-6 leading-relaxed">
-                Conditions are deteriorating. Your Gig Shield Max active status provides priority claim processing for this event.
+                {(user?.risk_profile_score || 1) > 1.2 
+                  ? "Atmospheric conditions are deteriorating in your zone. Your Ark Shield active status provides priority claim processing."
+                  : "Stable environmental telemetry detected. Your income protection remains active and monitoring local volatility."}
               </p>
               <div className="flex items-center gap-2 text-amber-500 text-xs font-bold uppercase tracking-wider">
                 <Shield size={14} /> Coverage Secured
@@ -197,7 +222,7 @@ export default function Dashboard({ user }) {
             <p className="section-label mb-3 border-b border-gray-200 pb-2">Active Coverage</p>
             <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4 flex justify-between items-center shadow-sm">
                <div>
-                 <p className="font-bold">Gig Shield Max</p>
+                 <p className="font-bold">Ark Shield Max</p>
                  <p className="text-xs text-gray-500">Policy: {activePolicy ? `#ARK-${activePolicy.id}` : 'Pending'}</p>
                </div>
                <span className="badge badge-premium">PREMIUM</span>
@@ -238,7 +263,7 @@ export default function Dashboard({ user }) {
                      <p className="text-sm font-bold text-dark">{claim.status === 'approved' ? 'Payout Disbursed' : 'Settlement Triggered'}</p>
                      <p className="text-xs text-gray-500 mb-1 capitalize">{(claim.trigger_type || 'Disruption').replace('_', ' ')} logic threshold met.</p>
                      <p className={`text-sm font-bold ${claim.status === 'approved' ? 'text-dark' : 'text-amber-600'}`}>
-                       {claim.status === 'approved' ? `$${claim.loss_calculated?.toFixed(2)} Paid` : `+$${claim.loss_calculated?.toFixed(2)} Pending`}
+                       {claim.status === 'approved' ? `₹${claim.loss_calculated?.toFixed(2)} Paid` : `+₹${claim.loss_calculated?.toFixed(2)} Pending`}
                      </p>
                    </div>
                  ))

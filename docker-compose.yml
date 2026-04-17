@@ -30,8 +30,9 @@ services:
   backend:
     build: 
       context: ./backend
+    image: ark-backend
     container_name: ark_backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: sh -c "python seed.py && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"
     environment:
@@ -49,8 +50,7 @@ services:
       - ./backend:/app
 
   celery_worker:
-    build: 
-      context: ./backend
+    image: ark-backend
     container_name: ark_celery_worker
     command: celery -A app.core.celery_app worker --loglevel=info
     environment:
@@ -59,6 +59,8 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
     depends_on:
+      backend:
+        condition: service_started
       db:
         condition: service_healthy
       redis:
@@ -67,14 +69,15 @@ services:
       - ./backend:/app
 
   celery_beat:
-    build: 
-      context: ./backend
+    image: ark-backend
     container_name: ark_celery_beat
     command: celery -A app.core.celery_app beat --loglevel=info
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-ark}
       REDIS_URL: redis://redis:6379/0
     depends_on:
+      backend:
+        condition: service_started
       db:
         condition: service_healthy
       redis:

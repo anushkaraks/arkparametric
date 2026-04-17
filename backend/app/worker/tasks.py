@@ -16,7 +16,7 @@ def poll_environmental_triggers(city: str = "Mumbai"):
     asyncio.run(_poll_and_commit(city))
 
 
-async def _poll_and_commit(city: str = "Mumbai"):
+async def _poll_and_commit(city: str = "Mumbai", force: bool = False):
     from app.services.weather_service import CITY_COORDS
 
     coords = CITY_COORDS.get(city.lower(), {"lat": 19.076, "lon": 72.877})
@@ -26,8 +26,8 @@ async def _poll_and_commit(city: str = "Mumbai"):
     triggers = []
 
     # Logic for trigger assessment:
-    if data["rainfall_mm"] > 10.0:
-        triggers.append({"type": "rain", "severity": data["rainfall_mm"]})
+    if data["rainfall_mm"] > 10.0 or force:
+        triggers.append({"type": "rain", "severity": max(12.5, data["rainfall_mm"])})
 
     if data["temperature"] > 40.0:
         triggers.append({"type": "heat", "severity": data["temperature"]})
@@ -95,10 +95,12 @@ async def _poll_and_commit(city: str = "Mumbai"):
                 await session.refresh(claim)
 
                 if claim.status == "approved":
+                    import uuid
                     payout = Payout(
                         claim_id=claim.id,
                         amount=loss_amount,
                         status="completed",
+                        transaction_id=f"ARK-AUTO-{uuid.uuid4().hex[:8].upper()}"
                     )
                     session.add(payout)
                     await session.commit()
